@@ -1,0 +1,25 @@
+packages/opencode/test/provider/provider.test.ts
+  634549c2f7dc4f56 2221-2281
+packages/opencode/src/provider/provider.ts
+  634549c2f7dc4f56 558-560,562-569,575
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "8486eece3ce484eed7d568396e1a9e72871d3629",
+  "prompts": {
+    "634549c2f7dc4f56": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_354f94624ffeMWziQ0hHCVxWCJ",
+        "model": "unknown"
+      },
+      "human_author": "Ryan Skidmore <rskidmore@cloudflare.com>",
+      "messages": [],
+      "total_additions": 74,
+      "total_deletions": 11,
+      "accepted_lines": 73,
+      "overriden_lines": 0
+    }
+  }
+}
