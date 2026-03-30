@@ -248,6 +248,30 @@ export const InstanceRoutes = (app?: Hono) =>
         return c.json(await Format.status())
       },
     )
+    .get(
+      "/plugin/versions",
+      describeRoute({
+        summary: "Get plugin versions",
+        description: "Get installed versions of all plugins from the cache.",
+        operationId: "plugin.versions",
+        responses: {
+          200: {
+            description: "Plugin versions",
+            content: {
+              "application/json": {
+                schema: resolver(z.record(z.string(), z.string())),
+              },
+            },
+          },
+        },
+      }),
+      async (c) => {
+        const pkg = await Bun.file(`${Global.Path.cache}/package.json`)
+          .json()
+          .catch(() => null)
+        return c.json((pkg as Record<string, unknown>)?.dependencies ?? {})
+      },
+    )
     .all("/*", async (c) => {
       const embeddedWebUI = await embeddedUIPromise
       const path = c.req.path

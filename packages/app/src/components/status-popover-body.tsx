@@ -169,6 +169,9 @@ export function StatusPopoverBody(props: { shown: Accessor<boolean> }) {
     lspLoading: false,
     mcpDone: false,
     mcpLoading: false,
+    ver: {} as Record<string, string>,
+    verDone: false,
+    verLoading: false,
   })
 
   const fail = (err: unknown) => {
@@ -197,6 +200,22 @@ export function StatusPopoverBody(props: { shown: Accessor<boolean> }) {
         .finally(() => {
           setLoad("mcpLoading", false)
         })
+    }
+
+    if (!load.verDone && !load.verLoading) {
+      setLoad("verLoading", true)
+      const url = new URL("/plugin/versions", sdk.url)
+      url.searchParams.set("directory", sdk.directory)
+      const auth: HeadersInit = server.current?.http.password
+        ? {
+            Authorization: `Basic ${btoa(`${server.current.http.username ?? "opencode"}:${server.current.http.password}`)}`,
+          }
+        : {}
+      void fetch(url, { headers: auth })
+        .then((r) => (r.ok ? r.json() : {}))
+        .then((data: Record<string, string>) => setLoad("ver", data))
+        .catch(() => setLoad("verDone", true))
+        .finally(() => setLoad("verLoading", false))
     }
 
     if (!sync.data.lsp_ready && !load.lspDone && !load.lspLoading) {
@@ -240,7 +259,13 @@ export function StatusPopoverBody(props: { shown: Accessor<boolean> }) {
   const lspItems = createMemo(() => sync.data.lsp ?? [])
   const lspCount = createMemo(() => lspItems().length)
   const plugins = createMemo(() =>
-    (sync.data.config.plugin ?? []).map((item) => (typeof item === "string" ? item : item[0])),
+    (sync.data.config.plugin ?? []).map((item) => {
+      const spec = typeof item === "string" ? item : item[0]
+      if (spec.startsWith("file://")) return { name: spec, version: "" }
+      const at = spec.lastIndexOf("@")
+      const pkg = at > 0 ? spec.substring(0, at) : spec
+      return { name: pkg, version: load.ver[pkg] ?? "" }
+    }),
   )
   const pluginCount = createMemo(() => plugins().length)
   const pluginEmpty = createMemo(() => pluginEmptyMessage(language.t("dialog.plugins.empty"), "opencode.json"))
@@ -428,10 +453,13 @@ export function StatusPopoverBody(props: { shown: Accessor<boolean> }) {
                 fallback={<div class="text-14-regular text-text-base text-center my-auto">{pluginEmpty()}</div>}
               >
                 <For each={plugins()}>
-                  {(plugin) => (
+                  {(p) => (
                     <div class="flex items-center gap-2 w-full px-2 py-1">
                       <div class="size-1.5 rounded-full shrink-0 bg-icon-success-base" />
-                      <span class="text-14-regular text-text-base truncate">{plugin}</span>
+                      <span class="text-14-regular text-text-base truncate">{p.name}</span>
+                      <Show when={p.version}>
+                        <span class="text-12-regular text-text-weak shrink-0">{p.version}</span>
+                      </Show>
                     </div>
                   )}
                 </For>
